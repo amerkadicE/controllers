@@ -9,7 +9,7 @@ import { CollectibleDetectionController } from './CollectibleDetectionController
 const DEFAULT_INTERVAL = 180000;
 const MAINNET = 'mainnet';
 const ROPSTEN = 'ropsten';
-const OPEN_SEA_HOST = 'https://api.opensea.io';
+const OPEN_SEA_HOST_PROXY = 'https://proxy.metaswap.codefi.network/opensea/v1';
 const OPEN_SEA_PATH = '/api/v1';
 
 describe('CollectibleDetectionController', () => {
@@ -57,7 +57,7 @@ describe('CollectibleDetectionController', () => {
     preferences.setOpenSeaEnabled(true);
     preferences.setUseCollectibleDetection(true);
 
-    nock(OPEN_SEA_HOST)
+    nock(OPEN_SEA_HOST_PROXY)
       .get(`${OPEN_SEA_PATH}/assets?owner=0x2&offset=0&limit=50`)
       .reply(200, {
         assets: [
@@ -83,7 +83,7 @@ describe('CollectibleDetectionController', () => {
       })
       .persist();
 
-    nock(OPEN_SEA_HOST)
+    nock(OPEN_SEA_HOST_PROXY)
       .get(
         `${OPEN_SEA_PATH}/asset_contract/0x1d963688FE2209A98dB35C67A041524822Cf04ff`,
       )
@@ -527,7 +527,7 @@ describe('CollectibleDetectionController', () => {
     ).toStrictEqual([collectibleContractHH]);
     // During next call of assets detection, API succeds returning contract ending in gg information
 
-    nock(OPEN_SEA_HOST)
+    nock(OPEN_SEA_HOST_PROXY)
       .get(
         `${OPEN_SEA_PATH}/asset_contract/0xCE7ec4B2DfB30eB6c0BB5656D33aAd6BFb4001Fc`,
       )
