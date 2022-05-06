@@ -444,13 +444,36 @@ export class CollectiblesController extends BaseController<
     const api = this.getCollectibleContractInformationApi(contractAddress);
     let apiCollectibleContractObject: ApiCollectibleContract;
     /* istanbul ignore if */
-    if (this.openSeaApiKey) {
-      apiCollectibleContractObject = await handleFetch(api, {
-        headers: { 'X-API-KEY': this.openSeaApiKey },
-      });
-    } else {
+
+    try {
       apiCollectibleContractObject = await handleFetch(api);
+    } catch (e) {
+      logOrRethrowError(e);
+      if (this.openSeaApiKey) {
+        apiCollectibleContractObject = await handleFetch(
+          `https://api.opensea.io/api/v1/asset_contract/${contractAddress}`,
+          {
+            headers: { 'X-API-KEY': this.openSeaApiKey },
+          },
+        );
+      } else {
+        return {
+          address: contractAddress,
+          asset_contract_type: null,
+          created_date: null,
+          schema_name: null,
+          symbol: null,
+          total_supply: null,
+          description: null,
+          external_link: null,
+          collection: {
+            name: null,
+            image_url: null,
+          },
+        };
+      }
     }
+
     return apiCollectibleContractObject;
   }
 
@@ -631,7 +654,6 @@ export class CollectiblesController extends BaseController<
       const { allCollectibleContracts } = this.state;
 
       let chainId, selectedAddress;
-
       if (detection) {
         chainId = detection.chainId;
         selectedAddress = detection.userAddress;
@@ -665,7 +687,7 @@ export class CollectiblesController extends BaseController<
         collection: { name, image_url },
       } = contractInformation;
       // If being auto-detected opensea information is expected
-      // Otherwise at least name and symbol from contract is needed
+      // Otherwise at least name from the contract is needed
       if (
         (detection && !name) ||
         Object.keys(contractInformation).length === 0
@@ -688,7 +710,6 @@ export class CollectiblesController extends BaseController<
         schema_name && { schemaName: schema_name },
         external_link && { externalLink: external_link },
       );
-
       const newCollectibleContracts = [...collectibleContracts, newEntry];
       this.updateNestedCollectibleState(
         newCollectibleContracts,
@@ -989,6 +1010,7 @@ export class CollectiblesController extends BaseController<
     const collectibleContract = newCollectibleContracts.find(
       (contract) => contract.address.toLowerCase() === address.toLowerCase(),
     );
+
     // If collectible contract information, add individual collectible
     if (collectibleContract) {
       await this.addIndividualCollectible(
